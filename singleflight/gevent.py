@@ -1,41 +1,42 @@
-#-*- coding:utf-8 -*-
-"""singleflight
-singleflight api implementation for asyncio
-"""
+"""singleflight api implementation for gevent"""
 
-from asyncio import (
-  Lock as async_lock, 
-  sleep as async_sleep, 
-  Event as async_event
-)
+from gevent import sleep as gv_sleep
+from gevent.threading import Lock as gv_lock
+from gevent.event import Event as gv_event
 from typing import Callable
 from functools import wraps, partial
 
-class CallLockAsync:
+class CallLockGevent:
   """
-  An async implementation of SingleFlight CallLock
+  A gevent implementation of SingleFlight CallLock
+
+  This implementation use gevent's version for event
+  not the monkey-patched version (should be the same in effect though)
   """
   def __init__(self):
     super().__init__()
-    self.ev = async_event()
+    self.ev = gv_event()
     self.res = None
     self.err = None
 
-class SingleFlightAsync:
+class SingleFlightGevent:
   """
-  SingleFlight's support of python's async/await (with asyncio/curio)
+  SingleFlight's support of gevent api
 
-  Contrast to SingleFlight class, this class is not thread-safe. 
-  You should only use this class when paired with async apps (asyncio/curio/the likes)
+  An application only need one of this object, 
+  as it can manage lots of call at the same time
+
+  This implementation use gevent's version for sleep and lock
+  not the monkey-patched version
   """
   def __init__(self):
     super().__init__()
-    self.lock = async_lock()
+    self.lock = gv_lock()
     self.m = {}
 
-  async def call(self, fn: Callable[[any], any], key: str, *args, **kwargs) -> any:
+  def call(self, fn: Callable[[any], any], key: str, *args, **kwargs) -> any:
     """
-    Asynchronously call `fn` with the given `*args` and `**kwargs` exactly once
+    Call `fn` with the given `*args` and `**kwargs` exactly once
 
     `key` are used to detect and coalesce duplicate call
 
@@ -48,24 +49,24 @@ class SingleFlightAsync:
 
     # this part does not use with-statement
     # because the one need to be waited is different object (self.lock vs self.m[key].ev)
-    await self.lock.acquire()
+    self.lock.acquire(True)
     if key in self.m:
       # key exists here means 
       # another thread is currently making the call
       # just need to wait
       self.lock.release()
-      await self.m[key].ev.wait()
+      self.m[key].ev.wait()
 
       if self.m[key].err:
         raise self.m[key].err
       return self.m[key].res
 
-    cl = CallLockAsync()
+    cl = CallLockGevent()
     self.m[key] = cl
     self.lock.release()
 
     try:
-      cl.res = await fn(*args, **kwargs)
+      cl.res = fn(*args, **kwargs)
       cl.err = None
     except Exception as e:
       cl.res = None
@@ -76,11 +77,11 @@ class SingleFlightAsync:
     # adding sleep a bit (currently hardcoded to 10ms) is still better
     # than database/any backend got stampeded
     cl.ev.set()
-    await async_sleep(0.01)
+    gv_sleep(0.01)
     
     # delete the calllock, so next call
     # with same key can pass through
-    async with self.lock:
+    with self.lock:
       del(self.m[key])
 
     if cl.err is not None:
@@ -88,7 +89,7 @@ class SingleFlightAsync:
     return cl.res
 
   def wrap(self, fn: Callable[[any], any]):
-    """ simple wrapper for SingleFlightAsync.call """
+    """ simple wrapper for SingleFlightGevent.call """
     @wraps(fn)
     def wrapper(*args, **kwargs):
       return partial(self.call, fn, *args, **kwargs)

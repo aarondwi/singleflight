@@ -2,7 +2,7 @@ import unittest
 from functools import partial
 
 import asyncio
-from src.singleflightasync import SingleFlightAsync as SingleFlight
+from singleflight.asynchronous import SingleFlightAsync as SingleFlight
 
 class TestSingleFlightAsync(unittest.TestCase):
   def test_call_directly(self):
@@ -54,17 +54,14 @@ class TestSingleFlightAsync(unittest.TestCase):
       
       # for the test, do not throw here
       # just hold the value to check later
-      try: await asyncio.gather(*res)
-      except: pass
+      await asyncio.gather(*res, return_exceptions=True)
     
     loop.run_until_complete(
       call_directly_failed_main())
 
     exception_count = 0
     for r in res:
-      self.assertEqual(
-        NotImplementedError, 
-        type(r.exception()))
+      self.assertRaises(NotImplementedError, r.result)
       exception_count += 1
 
     self.assertEqual(exception_count, 10)
@@ -122,16 +119,13 @@ class TestSingleFlightAsync(unittest.TestCase):
       
       # for the test, do not throw here
       # just hold the value to check later
-      try: await asyncio.gather(*res)
-      except: pass
+      await asyncio.gather(*res, return_exceptions=True)
     
     loop.run_until_complete(call_decorated_failed_main())
 
     exception_count = 0
     for r in res:
-      self.assertEqual(
-        NotImplementedError, 
-        type(r.exception()))
+      self.assertRaises(NotImplementedError, r.result)
       exception_count += 1
 
     self.assertEqual(exception_count, 10)
