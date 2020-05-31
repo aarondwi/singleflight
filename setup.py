@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='singleflight',
-    version='0.1.0',
+    version='0.1.1',
     description='Coalesce multiple identical call into one, preventing thundering-herd/stampede to database/other backends',
     long_description=open('README.md', 'r').read(),
     long_description_content_type="text/markdown",
