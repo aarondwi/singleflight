@@ -6,6 +6,7 @@ setup(
     version='0.1.0',
     description='Coalesce multiple identical call into one, preventing thundering-herd/stampede to database/other backends',
     long_description=open('README.md', 'r').read(),
+    long_description_content_type="text/markdown",
     keywords=['cache', 'stampede', 'thundering-herd'],
     classifiers=[
         'Development Status :: 4 - Beta',
