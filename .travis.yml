@@ -1,0 +1,20 @@
+language: python
+
+branches:
+  only:
+    - master
+
+python:
+  - "3.7"
+
+install:
+  - pip install -r requirements_test.txt
+  - pip install -r requirements_gevent.txt
+
+script:
+  - coverage run -m unittest tests.test_basic
+  - coverage report --fail-under=75
+  - coverage run --concurrency=gevent -m unittest tests.test_gevent
+  - coverage report --fail-under=75
+  - coverage run -m unittest tests.test_asynchronous
+  - coverage report --fail-under=75

@@ -1,8 +1,14 @@
 # singleflight
 
+[![Build Status](https://travis-ci.org/aarondwi/singleflight.svg?branch=master)](https://travis-ci.org/aarondwi/singleflight)
+
 Coalesce multiple identical call into one, preventing thundering-herd/stampede to database/other backends
 
 It is a python port of [golang's groupcache singleflight implementation](https://github.com/golang/groupcache/blob/master/singleflight/singleflight.go)
+
+This module **does not** provide caching mechanism. Rather, this module can used behind a caching abstraction to deduplicate cache-filling call
+
+Only support python 3.5+
 
 Installation
 -----------------------
@@ -38,7 +44,7 @@ if __name__ == '__main__':
   counter = 0
   result = "this is the result"
   def work(num):
-    nonlocal counter, result
+    global counter, result
     sleep(0.1) # emulate bit slower call
     counter += 1
     return (result, num)
@@ -53,7 +59,7 @@ if __name__ == '__main__':
     assert r.result()[0] == result
     # because only the first one can get the lock
     # and only that one request call
-    assert r.result()[0] == 1
+    assert r.result()[1] == 1
   
   assert counter == 1
 ```
@@ -77,7 +83,7 @@ if __name__ == '__main__':
 
   @sf.wrap
   def work(num):
-    nonlocal counter, result
+    global counter, result
     sleep(0.1) # emulate bit slower call
     counter += 1
     return (result, num)
@@ -92,7 +98,7 @@ if __name__ == '__main__':
     assert r.result()[0] == result
     # because only the first one can get the lock
     # and only that one request call
-    assert r.result()[0] == 1
+    assert r.result()[1] == 1
   
   assert counter == 1
 ```
