@@ -5,7 +5,9 @@ from time import sleep
 from typing import Callable
 from functools import wraps, partial
 
-class CallLock:
+__all__ = ['SingleFlight']
+
+class CallLock(object):
   """
   An internal object, that is used to track
   multiple call, and passing the result.
@@ -23,7 +25,7 @@ class CallLock:
     self.res = None
     self.err = None
 
-class SingleFlight:
+class SingleFlight(object):
   """
   SingleFlight's support of python's multi-threading
 
@@ -77,10 +79,10 @@ class SingleFlight:
 
     # give time for other threads to get value
     # or raising error (if any)
-    # adding sleep a bit (currently hardcoded to 10ms) is still better
+    # adding sleep a bit (currently hardcoded to 5ms) is still better
     # than database/any backend got stampeded
     cl.ev.set()
-    sleep(0.01)
+    sleep(0.005)
     
     # delete the calllock, so next call
     # with same key can pass through

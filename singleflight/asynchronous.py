@@ -8,7 +8,9 @@ from asyncio import (
 from typing import Callable
 from functools import wraps, partial
 
-class CallLockAsync:
+__all__ = ['SingleFlightAsync']
+
+class CallLockAsync(object):
   """
   An async implementation of SingleFlight CallLock
   """
@@ -18,7 +20,7 @@ class CallLockAsync:
     self.res = None
     self.err = None
 
-class SingleFlightAsync:
+class SingleFlightAsync(object):
   """
   SingleFlight's support of python's async/await (with asyncio/curio)
 
@@ -70,10 +72,10 @@ class SingleFlightAsync:
 
     # give time for other threads to get value
     # or raising error (if any)
-    # adding sleep a bit (currently hardcoded to 10ms) is still better
+    # adding sleep a bit (currently hardcoded to 5ms) is still better
     # than database/any backend got stampeded
     cl.ev.set()
-    await async_sleep(0.01)
+    await async_sleep(0.005)
     
     # delete the calllock, so next call
     # with same key can pass through

@@ -6,7 +6,9 @@ from gevent.event import Event as gv_event
 from typing import Callable
 from functools import wraps, partial
 
-class CallLockGevent:
+__all__ = ['SingleFlightGevent']
+
+class CallLockGevent(object):
   """
   A gevent implementation of SingleFlight CallLock
 
@@ -19,7 +21,7 @@ class CallLockGevent:
     self.res = None
     self.err = None
 
-class SingleFlightGevent:
+class SingleFlightGevent(object):
   """
   SingleFlight's support of gevent api
 
@@ -74,10 +76,10 @@ class SingleFlightGevent:
 
     # give time for other threads to get value
     # or raising error (if any)
-    # adding sleep a bit (currently hardcoded to 10ms) is still better
+    # adding sleep a bit (currently hardcoded to 5ms) is still better
     # than database/any backend got stampeded
     cl.ev.set()
-    gv_sleep(0.01)
+    gv_sleep(0.005)
     
     # delete the calllock, so next call
     # with same key can pass through
