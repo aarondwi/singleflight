@@ -6,4 +6,4 @@ python port of https://github.com/golang/groupcache/blob/master/singleflight/sin
 This module **does not** provide caching mechanism. Rather, this module can used behind a caching abstraction to deduplicate cache-filling call
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
