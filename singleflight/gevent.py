@@ -56,12 +56,13 @@ class SingleFlightGevent(object):
       # key exists here means 
       # another thread is currently making the call
       # just need to wait
+      cl = self.m[key]
       self.lock.release()
-      self.m[key].ev.wait()
+      cl.ev.wait()
 
-      if self.m[key].err:
-        raise self.m[key].err
-      return self.m[key].res
+      if cl.err:
+        raise cl.err
+      return cl.res
 
     cl = CallLockGevent()
     self.m[key] = cl
@@ -73,13 +74,8 @@ class SingleFlightGevent(object):
     except Exception as e:
       cl.res = None
       cl.err = e
-
-    # give time for other threads to get value
-    # or raising error (if any)
-    # adding sleep a bit (currently hardcoded to 5ms) is still better
-    # than database/any backend got stampeded
-    cl.ev.set()
-    gv_sleep(0.005)
+    finally:
+      cl.ev.set()
     
     # delete the calllock, so next call
     # with same key can pass through
